@@ -1,0 +1,71 @@
+-- 商品库存管理系统数据库初始化脚本
+CREATE DATABASE IF NOT EXISTS stock_manage DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE stock_manage;
+
+-- 商品表
+CREATE TABLE IF NOT EXISTS `goods` (
+  id INT PRIMARY KEY AUTO_INCREMENT COMMENT '商品ID',
+  name VARCHAR(100) NOT NULL COMMENT '商品名称',
+  category VARCHAR(50) COMMENT '分类',
+  spec VARCHAR(50) COMMENT '规格',
+  buy_price DECIMAL(10,2) DEFAULT 0 COMMENT '进价',
+  sell_price DECIMAL(10,2) DEFAULT 0 COMMENT '售价',
+  stock_num INT DEFAULT 0 COMMENT '当前库存',
+  warn_num INT DEFAULT 10 COMMENT '预警库存',
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 入库单主表
+CREATE TABLE IF NOT EXISTS stock_in (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  in_no VARCHAR(32) UNIQUE NOT NULL COMMENT '入库单号',
+  supplier VARCHAR(100) COMMENT '供应商',
+  total_money DECIMAL(12,2) DEFAULT 0 COMMENT '入库总金额',
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 入库明细
+CREATE TABLE IF NOT EXISTS stock_in_item (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  in_id INT NOT NULL,
+  goods_id INT NOT NULL,
+  num INT NOT NULL COMMENT '入库数量',
+  price DECIMAL(10,2) NOT NULL COMMENT '单价',
+  FOREIGN KEY (in_id) REFERENCES stock_in(id),
+  FOREIGN KEY (goods_id) REFERENCES goods(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 出库单主表
+CREATE TABLE IF NOT EXISTS stock_out (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  out_no VARCHAR(32) UNIQUE NOT NULL COMMENT '出库单号',
+  customer VARCHAR(100) COMMENT '客户/领用部门',
+  reason VARCHAR(200) COMMENT '出库原因',
+  total_money DECIMAL(12,2) DEFAULT 0,
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 出库明细
+CREATE TABLE IF NOT EXISTS stock_out_item (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  out_id INT NOT NULL,
+  goods_id INT NOT NULL,
+  num INT NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  FOREIGN KEY (out_id) REFERENCES stock_out(id),
+  FOREIGN KEY (goods_id) REFERENCES goods(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 库存盘点表
+CREATE TABLE IF NOT EXISTS stock_check (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  check_no VARCHAR(32) NOT NULL COMMENT '盘点单号（一单多行，行内非唯一）',
+  goods_id INT NOT NULL,
+  book_num INT NOT NULL COMMENT '账面库存',
+  real_num INT NOT NULL COMMENT '实际库存',
+  diff_num INT NOT NULL COMMENT '盘盈盘亏',
+  remark VARCHAR(255) DEFAULT '' COMMENT '盈亏原因备注',
+  check_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_check_no(check_no),
+  FOREIGN KEY (goods_id) REFERENCES goods(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
