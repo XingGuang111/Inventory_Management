@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/auth.php';
+requireLogin();
 $db = new DB();
 $act = $_GET['act'] ?? $_POST['act'] ?? '';
 
@@ -31,6 +33,7 @@ if ($act === 'detail') {
 }
 
 if ($act === 'save') {
+    requirePerm('check');
     $p = req();
     $items = $p['items'] ?? [];
     if (!is_array($items) || count($items) === 0) ret(400, '无盘点数据');

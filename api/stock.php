@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/auth.php';
+requireLogin();
 $db = new DB();
 // 实时库存总表
 $rows = $db->query(

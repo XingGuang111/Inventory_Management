@@ -1,14 +1,18 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/auth.php';
+requireLogin();
 $db = new DB();
 $act = $_GET['act'] ?? $_POST['act'] ?? '';
 
 switch ($act) {
+    // 商品清单是"库存查询"页也要用的基础数据，登录即可读；写操作才需要 goods 权限
     case 'list':
         $rows = $db->query('SELECT * FROM goods ORDER BY id DESC');
         ret(200, 'ok', $rows);
         break;
     case 'add': {
+        requirePerm('goods');
         $p = req();
         if (empty($p['name'])) ret(400, '商品名称不能为空');
         $id = $db->exec(
@@ -21,6 +25,7 @@ switch ($act) {
         break;
     }
     case 'edit': {
+        requirePerm('goods');
         $p = req();
         if (empty($p['id'])) ret(400, '缺少商品ID');
         $db->exec(
@@ -33,6 +38,7 @@ switch ($act) {
         break;
     }
     case 'del': {
+        requirePerm('goods');
         $p = req();
         if (empty($p['id'])) ret(400, '缺少商品ID');
         try {

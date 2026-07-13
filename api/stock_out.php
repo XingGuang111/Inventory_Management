@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/auth.php';
+requireLogin();
 $db = new DB();
 $act = $_GET['act'] ?? $_POST['act'] ?? '';
 
@@ -16,6 +18,7 @@ if ($act === 'list') {
 }
 
 if ($act === 'add') {
+    requirePerm('stock_out');
     $p = req();
     $items = $p['items'] ?? [];
     if (!is_array($items) || count($items) === 0) ret(400, '请添加出库商品');
