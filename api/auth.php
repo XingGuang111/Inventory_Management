@@ -51,7 +51,8 @@ function requireRole($role) {
 // 按模块权限码校验：admin 一律放行；非 admin 需在 permissions 列表里
 function requirePerm($perm) {
     requireLogin();
-    if (($_SESSION['role'] ?? '') === 'admin') return;
+    $role = $_SESSION['role'] ?? '';
+    if ($role === 'admin') return;
     $perms = $_SESSION['permissions'] ?? [];
     if (!in_array($perm, $perms, true)) {
         ret(403, '当前账号无权限访问该模块');

@@ -109,6 +109,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '../utils/request'
+import { user, setUser } from '../utils/authState'
 
 const list      = ref([])
 const allPerms  = ref([])
@@ -158,6 +159,12 @@ async function doEdit() {
     role: editForm.value.role,
     permissions: editForm.value.permissions,
   })
+  // 后端在「改的是当前登录用户自己」时，会返回新的 role/permissions；
+  // 前端收到后立刻同步 authState，菜单/顶栏/按钮立刻按新权限渲染，
+  // 不用再手动刷新整页。
+  if (r.data?.id === user.value.id) {
+    setUser({ ...user.value, role: r.data.role, permissions: r.data.permissions })
+  }
   ElMessage.success(r.msg)
   showEdit.value = false
   load()

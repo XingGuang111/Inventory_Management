@@ -48,20 +48,17 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
 import request from './utils/request'
+import { user, clearUser } from './utils/authState'
 
 const route  = useRoute()
 const router = useRouter()
 
-const user = computed(() => {
-  try { return JSON.parse(localStorage.getItem('stock_user') || '{}') }
-  catch { return {} }
-})
-
+// user 来自 authState，是响应式 ref；登录/退出/改自己权限后会自动重渲染
 // 权限判断：admin 一律 true；其它按 permissions 数组
 function hasPerm(code) {
   const u = user.value
@@ -91,14 +88,14 @@ async function doChangePwd() {
   showPwd.value = false
   // 密码变更 → 强制重新登录（后端并未 destroy session，前端主动登出即可）
   try { await request.post('/login.php?act=logout') } catch (_) {}
-  localStorage.removeItem('stock_user')
+  clearUser()
   router.replace('/login')
 }
 
 async function logout() {
   try { await ElMessageBox.confirm('确定退出登录吗？', '提示', { type: 'warning' }) } catch { return }
   try { await request.post('/login.php?act=logout') } catch (_) {}
-  localStorage.removeItem('stock_user')
+  clearUser()
   ElMessage.success('已退出')
   router.replace('/login')
 }

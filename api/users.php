@@ -72,15 +72,25 @@ if ($act === 'update') {
         if ((int)$left['c'] === 0) ret(400, '不能取消最后一个管理员的 admin 角色');
     }
 
+    // 防御性编程：如果目标原本就是 admin，但是收到的 role 为空，
+    // 保持原有 role 不变，防止前端BUG把 admin 变成空权限
+    if ($target['role'] === 'admin' && $role === '') {
+        $role = 'admin';
+    }
+
     $permStr = $role === 'admin' ? '' : implode(',', $perms);
     $db->exec('UPDATE users SET role=?, permissions=? WHERE id=?', [$role, $permStr, $id]);
 
-    // 若被改的正是当前登录会话，同步刷新 session（否则要重新登录才生效）
+    // 若被改的正是当前登录会话，同步刷新 session；并把最新 role/permissions
+    // 回传给前端，让 authState 一起更新（避免"session 是新权限、localStorage
+    // 是旧权限"导致 UI 与实际权限脱节）。
+    $payload = null;
     if ($id === (int)$_SESSION['uid']) {
         $_SESSION['role']        = $role;
         $_SESSION['permissions'] = $perms;
+        $payload = ['id' => $id, 'role' => $role, 'permissions' => $perms];
     }
-    ret(200, '已保存');
+    ret(200, '已保存', $payload);
 }
 
 if ($act === 'set_active') {

@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import { user, clearUser } from './authState'
 
 const service = axios.create({
   baseURL: '/api',
@@ -11,10 +12,8 @@ const service = axios.create({
 // token 由登录接口返回并存 localStorage；后端在 requireLogin 中比对 X-CSRF-Token
 service.interceptors.request.use(cfg => {
   if ((cfg.method || 'get').toLowerCase() === 'post') {
-    try {
-      const u = JSON.parse(localStorage.getItem('stock_user') || '{}')
-      if (u.csrf) cfg.headers['X-CSRF-Token'] = u.csrf
-    } catch (_) { /* ignore */ }
+    const u = user.value
+    if (u.csrf) cfg.headers['X-CSRF-Token'] = u.csrf
   }
   return cfg
 })
@@ -23,7 +22,7 @@ service.interceptors.response.use(
   res => {
     const d = res.data
     if (d.code === 401) {
-      localStorage.removeItem('stock_user')
+      clearUser()
       ElMessage.warning(d.msg || '登录已过期，请重新登录')
       const cur = location.hash.replace(/^#/, '') || '/'
       if (!cur.startsWith('/login')) {

@@ -24,6 +24,7 @@ import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import request from '../utils/request'
+import { setUser } from '../utils/authState'
 
 const router = useRouter()
 const route  = useRoute()
@@ -37,8 +38,8 @@ async function submit() {
   loading.value = true
   try {
     const res = await request.post('/login.php?act=login', form.value)
-    // 缓存到 localStorage，App.vue 显示用户名 + 路由守卫本地快速判断
-    localStorage.setItem('stock_user', JSON.stringify(res.data))
+    // 写 localStorage + 同步响应式 user，App.vue 立刻就能拿到新账号信息
+    setUser(res.data)
     ElMessage.success('登录成功')
     const redirect = route.query.redirect || '/goods'
     router.replace(redirect)

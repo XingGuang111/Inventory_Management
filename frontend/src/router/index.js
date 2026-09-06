@@ -1,4 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import { user } from '../utils/authState'
 
 // 路由 meta.perm：登录用户需拥有此模块权限才可进；admin 天然全通
 // meta.role：仅指定角色可进（用户管理）
@@ -21,16 +22,15 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   if (to.meta.public) return true
-  let user = {}
-  try { user = JSON.parse(localStorage.getItem('stock_user') || '{}') } catch (_) {}
-  if (!user.id) return { path: '/login', query: { redirect: to.fullPath } }
+  const u = user.value
+  if (!u.id) return { path: '/login', query: { redirect: to.fullPath } }
 
   // 角色限定（用户管理）
-  if (to.meta.role && user.role !== to.meta.role) return { path: '/goods' }
-  // 模块权限限定；admin 直通
-  if (to.meta.perm && user.role !== 'admin') {
-    const perms = user.permissions || []
-    if (!perms.includes(to.meta.perm)) return { path: '/goods' }
+  if (to.meta.role && (u.role !== to.meta.role)) return { path: '/goods' }
+  // 模块权限限定；admin 直通 — 确保处理 undefined/null 情况
+  if (to.meta.perm && (u.role !== 'admin')) {
+    const perms = u.permissions || []
+    if (!Array.isArray(perms) || !perms.includes(to.meta.perm)) return { path: '/goods' }
   }
   return true
 })
